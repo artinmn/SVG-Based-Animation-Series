@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+  	<style>
+    body {
+    background-color:gray;
+    }
+    * {
+    font-family: Arial;
+    }
+    svg {
+    position:absolute;
+    }
+    h2, h3 {
+    text-align: center;
+    }
+    #controller {
+    color: white;
+    background-color: black;
+    width: 220px;
+    height: 570px;
+    border: 1px solid white;
+    padding: 8px;
+    }
+    #number_result, #speed_result, #size_result, #width_result {
+    font-size: 15px;
+    text-align: center;
+    }
+    #whole {
+    position: fixed;
+    top: 50%;
+    left: 50%; 
+    margin-top:-350px;
+    margin-left:-365px;
+/*    width: 2000px;
+    height: 2000px;*/
+    }
+    .slider {
+    color: black;
+    background-color: gray;
+    font-size: 12px;
+    border: 1px solid white;
+    }
+    </style>
+    </head>
+    <body style="background-color:gray;">
+    <div id="controller">
+    <h2>Controller<h1>
+    <div class="slider">
+    <h3>Number of Triangles<h3>
+    1
+    <input id="number" type="range" min="2" max="51" value="10"> 50
+    <p id="number_result">10</p>
+    </div>
+    <div class="slider">
+    <h3>Number of Rotations<h3>
+    1
+    <input id="speed" type="range" step="1" min="1" max="10" value="1"> 10
+    <p id="speed_result">1</p>
+    </div>
+    <div class="slider">
+    <h3>Size of Triangles<h3>
+    100
+    <input id="size" type="range" step="10" min="100" max="300" value="200"> 300
+    <p id="size_result">200</p>
+    </div>
+    <div class="slider">
+    <h3>Width of Borders<h3>
+    1
+    <input id="width" type="range" step="1" min="1" max="10" value="5"> 10
+    <p id="width_result">5</p>
+    </div>
+    </div>
+    <div id="whole">
+    </div>
+    <script type="text/javascript">
+    
+    // variables to manipulate the spiral
+    var number = 10,
+        speed = 10,
+        color = "black",
+        border_color = "white",
+        border_width = "5",
+        base = 200,
+        height = base*Math.sqrt(3)/2,
+        vertex = "400,250";
+   
+     // number of triangles slider
+     document.getElementById("number").addEventListener("input", function() {
+     number = document.getElementById("number").value;
+     document.getElementById("number_result").innerHTML = (number-1);
+     clear();
+     set();
+     }, false);
+
+     // number of rotations slider
+     document.getElementById("speed").addEventListener("input", function() {
+     speed = (document.getElementById("speed").value*10);
+     document.getElementById("speed_result").innerHTML = (speed/10);
+     clear();
+     set();
+     }, false);
+
+     // size of triangles slider
+     document.getElementById("size").addEventListener("input", function() {
+     base = document.getElementById("size").value;
+     height = base*Math.sqrt(3)/2;
+     vertex_x = parseInt(vertex.split(",")[0]);
+     vertex_y = parseInt(vertex.split(",")[1]);
+     l_side = (vertex_x-base/2)+","+(vertex_y+height);
+     r_side = (vertex_x+base/2)+","+(vertex_y+height);
+     center_x = vertex_x+"px";
+     center_y = vertex_y+height*2/3+"px";
+     document.getElementById("size_result").innerHTML = base;
+     clear();
+     set();
+     }, false);
+
+    // width of triangles borders slider
+     document.getElementById("width").addEventListener("input", function() {
+     border_width = (document.getElementById("width").value).toString();
+     document.getElementById("width_result").innerHTML = border_width;
+     clear();
+     set();
+     }, false);
+
+    // for internal calculation variables
+    var vertex_x = parseInt(vertex.split(",")[0]),
+        vertex_y = parseInt(vertex.split(",")[1]),
+        l_side = (vertex_x-base/2)+","+(vertex_y+height),
+        r_side = (vertex_x+base/2)+","+(vertex_y+height),
+        center_x = vertex_x+"px",
+        center_y = vertex_y+height*2/3+"px"; 
+
+    // triangles function to be called
+    function triangles (i)
+    {
+    // svg element
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "1000");
+    svg.setAttribute("height", "1000");
+    svg.setAttribute("id", "svg"+i);
+    document.getElementById("whole").appendChild(svg);
+
+    // polygon element
+    var polygon = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+    polygon.setAttribute("points", vertex+" "+r_side+" "+l_side);
+    polygon.setAttribute("id", "tri"+i);
+    polygon.style.fill=color;
+    polygon.style.stroke = border_color;
+    polygon.setAttribute("stroke-width",border_width);
+    //polygon.setAttribute("stroke-dasharray","20,10,5,5,5,10");
+    //polygon.setAttribute("stroke-linecap","round");
+    document.getElementById("svg"+i).appendChild(polygon);
+
+    // color animation element
+    var attr = "stroke,fill",
+        color_from = "white,none",
+        color_to = "white,none",
+        duration = "1s,1s",
+        repeat = "indefinite,indefinite"; 
+    for (var r = 0; r < 2; r++) {
+    var animate = document.createElementNS("http://www.w3.org/2000/svg","animate");
+    animate.setAttribute("attributeName", attr.split(",")[r]);
+    animate.setAttribute("repeatCount", repeat.split(",")[r]);
+    animate.setAttribute("dur", duration.split(",")[r]);
+    animate.setAttribute("from", color_from.split(",")[r]);
+    animate.setAttribute("to", color_to.split(",")[r]);
+    animate.setAttribute("begin", (i-1)/number+"s");
+    document.getElementById("tri"+i).appendChild(animate);
+    }
+
+    // css transform animations
+    var x = i*12*speed, y = i*24*speed, z = i*36*speed;
+    var prefixes = " ,-webkit-,-moz-";
+    // insert the css transform for different vendors
+    //for ( var k = 0; k < prefixes.split(",").length; k++)
+    //{
+    //var prefix = prefixes.split(",")[k];
+    prefix = "-webkit-";
+    //prefix = " ";
+    //var style = document.getElementById("tri"+i);
+    polygon.style[prefix +'animation'] = 'anim'+i+' '+number+'s infinite';
+    polygon.style[prefix +'transform-origin'] = center_x+" "+center_y;
+    polygon.style[prefix +'animation-timing-function'] = 'ease-in-out';
+
+    var scale = 'scale('+(2*((number-i+1)/number))+')';
+    var keyframes = '@' + prefix + 'keyframes anim'+i+' { '+
+                    '0% {' + prefix + 'transform: rotate( 0deg ) '+scale+'; } '+
+                    '30% {' + prefix + 'transform: rotate( '+x+'deg ) '+scale+'; } '+
+                    '33% {' + prefix + 'transform: rotate( '+x+'deg ) '+scale+'; } '+
+                    '63% {' + prefix + 'transform: rotate( '+y+'deg ) '+scale+'; } '+
+                    '66% {' + prefix + 'transform: rotate( '+y+'deg ) '+scale+'; } '+
+                    '100% {' + prefix + 'transform: rotate( '+z+'deg ) '+scale+'; } '+
+                  '}';
+
+    document.styleSheets[0].insertRule(keyframes, 0);
+    //}
+    }
+
+    // call the set function
+    set();
+
+    // call the triangles function
+    function set() {
+    for (var i = 1; i < number; i++)
+    triangles(i);
+    }
+
+    // clear the page
+    function clear() {
+    var node = document.getElementById("whole");
+    while (node.firstChild)
+    {
+    node.removeChild(node.firstChild);
+    document.styleSheets[0].deleteRule(0);
+    }
+    }
+
+    //for (var i = 0; i < document.styleSheets[0].cssRules.length; i++)
+    //alert(document.styleSheets[0].cssRules[i].cssText);
+    //var out = document.getElementById("tri1");
+    //alert(window.getComputedStyle(out).getPropertyValue("height"));
+
+    </script>
+    </body>
+    </html>

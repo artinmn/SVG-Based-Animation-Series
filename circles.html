@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+  	<style>
+    body {
+    background-color:black;
+    }
+    * {
+    font-family: Arial;
+    }
+    svg {
+    position:absolute;
+    }
+    #whole {
+    position: fixed;
+    top: 50%;
+    left: 50%; 
+    margin-top: -420px;
+    margin-left: -420px;
+/*    width: 2000px;
+    height: 2000px;*/
+    }
+    h2, h3 {
+    text-align: center;
+    }
+    #controller {
+    color: white;
+    background-color: black;
+    width: 220px;
+    height: 570px;
+    border: 1px solid white;
+    padding: 8px;
+    }
+    #number_result, #speed_result, #size_result, #width_result {
+    font-size: 15px;
+    text-align: center;
+    }
+    .slider {
+    color: black;
+    background-color: gray;
+    font-size: 12px;
+    border: 1px solid white;
+    }
+    </style>
+    </head>
+    <body>
+    <?xml version="1.0"?>
+    <div id="controller">
+    <h2>Controller<h2>
+    <div class="slider">
+    <h3>Number of Circles<h3>
+    10
+    <input id="number" type="range" step="5" min="10" max="200" value="15"> 200
+    <p id="number_result">15</p>
+    </div>
+    <div class="slider">
+    <h3>Completion Time (s)<h3>
+    1
+    <input id="speed" type="range" step="1" min="1" max="10" value="2"> 10
+    <p id="speed_result">2</p>
+    </div>
+    <div class="slider">
+    <h3>Radius of Circles<h3>
+    1
+    <input id="size" type="range" step="1" min="1" max="80" value="7"> 80
+    <p id="size_result">7</p>
+    </div>
+    <div class="slider">
+    <h3>Overall Distance<h3>
+    20
+    <input id="width" type="range" step="10" min="20" max="120" value="80"> 120
+    <p id="width_result">80</p>
+    </div>
+    </div>
+    <div id="whole">
+    </div>
+    <script type="text/javascript">
+
+    // variables to manipulate the spiral
+    var number = 15,
+        radius = "7",
+        duration = "2",
+        distance = 80;
+
+     // number of circles slider
+     document.getElementById("number").addEventListener("input", function() {
+     number = document.getElementById("number").value;
+     document.getElementById("number_result").innerHTML = number;
+     clear();
+     set();
+     }, false);
+
+     // Completion time slider
+     document.getElementById("speed").addEventListener("input", function() {
+     duration = document.getElementById("speed").value;
+     document.getElementById("speed_result").innerHTML = duration.toString();
+     clear();
+     set();
+     }, false);
+
+    // radius of circles slider
+     document.getElementById("size").addEventListener("input", function() {
+     radius = document.getElementById("size").value;
+     document.getElementById("size_result").innerHTML = radius.toString();
+     clear();
+     set();
+     }, false);
+
+     // Overal size slider
+     document.getElementById("width").addEventListener("input", function() {
+     distance = document.getElementById("width").value;
+     document.getElementById("width_result").innerHTML = distance;
+     clear();
+     set();
+     }, false);
+
+
+    // svg element
+    function createSVG() {
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "1200");
+    svg.setAttribute("height", "1200");
+    svg.setAttribute("id", "svg");
+    document.getElementById("whole").appendChild(svg);
+    }
+
+    // circles function to be called
+    function circles (i)
+    {
+    // internal calculation variables
+    var small_distance = 20-distance;
+    var deg = (i * (360/number) * (Math.PI/180));
+    var x = ((distance*(Math.cos(deg)))+220);
+    var y = ((distance*(Math.sin(deg)))+220);
+    var final_x = ((small_distance*(Math.cos(deg)))+220);
+    var final_y = ((small_distance*(Math.sin(deg)))+220);
+    var line_x = (x-final_x);
+    var line_y = (y-final_y);
+    var delay = 0.4*i;
+    var line_color = "black";
+    var color = "#"+(i%16).toString(16)+"000FF";
+    //var line_color = "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
+
+    // hidden path element
+    var path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("id", "path"+i);
+    var p = "M"+final_x+","+final_y+" "+x+","+y+" "+x+","+y+" "+final_x+","+final_y+" ";
+    path.setAttribute("d",p);
+    //path.style.fill = "white";
+    path.style.stroke = line_color;
+    path.setAttribute("stroke-width","0");
+    document.getElementById("svg").appendChild(path);
+
+    var increment = 0.2;
+
+    if (number > 200)
+    increment = 1;
+
+    for ( var k = 0; k < 1; k+=increment)
+    {
+    // circle element
+    var circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("id", "circ"+(i+k));
+    circle.setAttribute("r", (radius*(1-k*0.5)));
+    circle.setAttribute("cx", x);
+    circle.setAttribute("cy", y);    
+    circle.style.fill = color;
+    circle.style.opacity = 1 - k;
+    document.getElementById("svg").appendChild(circle);
+
+    // animationMotion element
+    var animate = document.createElementNS("http://www.w3.org/2000/svg","animateMotion");
+    animate.setAttribute("id", "anim"+(i+k));
+    animate.setAttribute("repeatCount", "indefinite");
+    animate.setAttribute("dur", duration+"s");
+    animate.setAttribute("begin", "-"+(delay-(k*0.2))+"s");
+    document.getElementById("circ"+(i+k)).appendChild(animate);
+
+    // mpath element
+    var mpath = document.createElementNS("http://www.w3.org/2000/svg","mpath");
+    mpath.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#path"+i);
+    document.getElementById("anim"+(i+k)).appendChild(mpath);
+
+    /*    var line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("id", "lin"+i);
+    line.setAttribute("x1", final_x);
+    line.setAttribute("y1", final_y);
+    line.setAttribute("x2", x);
+    line.setAttribute("y2", y);
+    line.style.fill = "black";
+    line.style.stroke = "black";
+    line.setAttribute("stroke-width","0");
+    document.getElementById("svg"+i).appendChild(line);*/
+    }
+    }
+
+    // call the set function
+    set();
+
+    // call the main function
+    function set() {
+    createSVG();
+    for (var i = 1; i <= number; i++)
+    circles(i);
+    }
+
+    // clear the page
+    function clear() {
+    var node = document.getElementById("whole");
+    while (node.firstChild)
+    node.removeChild(node.firstChild);
+    }
+    </script>
+    </body>
+    </html>
